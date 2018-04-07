@@ -2,7 +2,9 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.io as spio
-
+'''
+Author: Mohammad Mehdi Rezaee Taghiabadi
+'''
 def xavier_init(fan_in, fan_out, constant=1):
     """ Xavier initialization of network_enc weights"""
     # https://stackoverflow.com/questions/33640581/how-to-do-xavier-initialization-on-tensorflow
