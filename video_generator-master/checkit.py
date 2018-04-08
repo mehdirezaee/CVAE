@@ -13,12 +13,10 @@ rawData=(rawData-raw_min)/(raw_max-raw_min)
 print(np.min(rawData))
 #fig=plt.figure()
 #ims=[]
-'''
 for i in range(0,45):
 	im=plt.imshow(rawData[20,:,:,i],cmap='gray',animated=True)
 	ims.append([im])
 	#plt.show()
-
-#anim = animation.ArtistAnimation(fig, ims, interval=150, blit=True,repeat_delay=1000)
-#anim.save('dynamic_images.mp4')
+anim = animation.ArtistAnimation(fig, ims, interval=150, blit=True,repeat_delay=1000)
+anim.save('dynamic_images.mp4')
 '''

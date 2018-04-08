@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import animation, rc
 import scipy.io as spio
 '''
 Author: Mohammad Mehdi Rezaee Taghiabadi
@@ -211,7 +212,7 @@ optimizer = tf.train.AdamOptimizer(learning_rate=0.01).minimize(cost)
 
 sess=tf.Session()
 sess.run(tf.global_variables_initializer())
-training_epochs=100
+training_epochs=200
 display_step=5
 
 plt.ion()
@@ -221,8 +222,24 @@ for epoch in range(training_epochs):
 	#print(total_batch
 	for i in range(total_batch):
 		batch_xs = aod_next_batch(network_enc['batch_size'],rawData)
-		cost_show,my_reonstr,_=sess.run((cost,x_reconst_mean_flat,optimizer),feed_dict={x:batch_xs})
+		cost_show,my_reonstr,_=sess.run((cost,x_reconst_mean,optimizer),feed_dict={x:batch_xs})
 		avg_cost += cost_show / n_samples * network_enc['batch_size']
 		#print('epoch:',epoch,' i:',i,avg_cost)
 	if (epoch % display_step == 0):
-		print("Epoch:", '%04d' % (epoch+1),"cost=", "{:.9f}".format(avg_cost))             
+		print("Epoch:", '%04d' % (epoch+1),"cost=", "{:.9f}".format(avg_cost))
+	if (epoch==191):
+		ims=[]
+		fig=plt.figure()
+		for i in range(0,45):
+			im=plt.imshow(my_reonstr[20,:,:,i],cmap='gray',animated=True)
+			ims.append([im])
+			anim = animation.ArtistAnimation(fig, ims, interval=150, blit=True,repeat_delay=1000)
+			anim.save('reconstr_vid.mp4')
+		ims=[]
+		fig=plt.figure()
+		for i in range(0,45):
+			im=plt.imshow(batch_xs[20,:,:,i],cmap='gray',animated=True)
+			ims.append([im])
+			anim = animation.ArtistAnimation(fig, ims, interval=150, blit=True,repeat_delay=1000)
+			anim.save('main_vid.mp4')
+
