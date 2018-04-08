@@ -40,7 +40,7 @@ def dense(x, input_dim, output_dim, name, reuse = False):
 
 		return tf.matmul(x, w) + b
 
-def frey_next_batch(num, data):
+def aod_next_batch(num, data):
     '''
     Return a total of `num` random samples and labels.
     '''
@@ -51,32 +51,42 @@ def frey_next_batch(num, data):
     #print(idx)
     return np.asarray(data_shuffle)
 
+rawData = spio.loadmat('aod13d.mat', squeeze_me=True)
+rawData=rawData['dat3f']
+raw_min=np.min(rawData)
+raw_max=np.max(rawData)
+rawData=(rawData-raw_min)/(raw_max-raw_min)
 #np.random.seed(0)
 #tf.set_random_seed(0)
 #mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
-test_mat = spio.loadmat('../frey.mat', squeeze_me=True)
-frey_images=test_mat['ff']
-frey_images=(frey_images-np.min(frey_images))/(np.max(frey_images)-np.min(frey_images))
-frey_images=np.transpose(frey_images)
-frey_images=np.reshape(frey_images,[-1,28,20,1])
-n_samples=frey_images.shape[0]
-# plt.imshow(frey_images[5,:,:,0],cmap='gray')
+
+'''
+test_mat = spio.loadmat('aod13d.mat', squeeze_me=True)
+aod_images=test_mat['dat3f']
+aod_images=(aod_images-np.min(aod_images))/(np.max(aod_images)-np.min(aod_images))
+aod_images=np.transpose(aod_images)
+#aod_images=np.reshape(aod_images,[-1,28,20,1])
+n_samples=aod_images.shape[0]
+'''
+
+# plt.imshow(aod_images[5,:,:,0],cmap='gray')
 # plt.show()
 #print(n_samples)
-#mm=frey_next_batch(50,frey_images)
+#mm=aod_next_batch(50,aod_images)
 
 
 '''
-im=frey_images[200,:,:]
-plt.imshow(frey_images[500,:].reshape(28,20),cmap='gray')
+im=aod_images[200,:,:]
+plt.imshow(aod_images[500,:].reshape(28,20),cmap='gray')
 plt.show()
 '''
-#print('frey_images',frey_images.shape)
+#print('aod_images',aod_images.shape)
 
 batch_size=30
+n_samples=rawData.shape[0]
 #im=np.asarray(plt.imread('akg.jpg'))
-width,height=frey_images.shape[1],frey_images.shape[2]
-depth=1
+width,height=rawData.shape[1],rawData.shape[2]
+depth=rawData.shape[3]
 
 network_enc={
 'output1':12, # 1st layer encoder neurons
@@ -112,7 +122,7 @@ print('y2_enc',y2_enc.get_shape().as_list())
 '''
 sess=tf.Session()
 sess.run(tf.global_variables_initializer())
-result=sess.run(y2_enc,feed_dict={x:frey_images[0:30,:]})
+result=sess.run(y2_enc,feed_dict={x:aod_images[0:30,:]})
 print(result)
 '''
 y2_enc_shape=y2_enc.get_shape().as_list()
@@ -143,10 +153,10 @@ z_h1_b=tf.Variable(tf.zeros(shape=[y2_enc_flat.get_shape().as_list()[1]]),name='
 
 _,y2_dec_width,y2_dec_height,y2_dec_filter=y2_enc.get_shape().as_list()
 y2_dec=tf.add(tf.matmul(z,z_h1_w),z_h1_b,name='y2_dec')
-print('y2_dec',y2_dec.get_shape().as_list())
 
 y2_dec_flat=tf.nn.softmax(tf.reshape(y2_dec,[-1,y2_dec_width,y2_dec_height,y2_dec_filter]))
 _,y1_dec_width,y1_dec_height,y1_dec_filter=y1_enc.get_shape().as_list()
+print('y2_dec',y2_dec_flat.get_shape().as_list())
 
 y2_dec_h2_w=tf.Variable(tf.random_uniform([5,5,y1_dec_filter,y2_dec_filter]))
 print('y2_dec_h2_w',y2_dec_h2_w.get_shape().as_list())
@@ -167,7 +177,7 @@ y1_dec_x_w_sigma=tf.Variable(tf.random_uniform([5,5,depth,y1_dec_filter]))
 y1_dec_x_b_sigma=tf.Variable(tf.zeros(shape=[depth]))
 
 x_reconst_mean=(tf.add(tf.nn.conv2d_transpose(y1_dec,y1_dec_x_w_mean,output_shape=x.get_shape().as_list(),strides = [1,3,3,1]),y1_dec_x_b_mean))
-print('x_reconst_mean',y1_dec_x_w_mean.get_shape().as_list())
+print('x_reconst_mean',x_reconst_mean.get_shape().as_list())
 
 x_reconst_log_sigma=(tf.add(tf.nn.conv2d_transpose(y1_dec,y1_dec_x_w_sigma,output_shape=x.get_shape().as_list(),strides = [1,3,3,1]),y1_dec_x_b_sigma))
 print('x_reconst_log_sigma',x_reconst_log_sigma.get_shape().as_list())
@@ -193,7 +203,7 @@ optimizer = tf.train.AdamOptimizer(learning_rate=0.01).minimize(cost)
 
 
 # batch_size=10
-# raw_inp=np.reshape(frey_images[500:510,:],[batch_size,width,height])
+# raw_inp=np.reshape(aod_images[500:510,:],[batch_size,width,height])
 # plt.imshow(raw_inp[0,:,:],cmap='gray')
 # plt.show()
 #inp_reshaped=tf.reshape(raw_inp,[-1,width,height,depth])
@@ -204,28 +214,15 @@ sess.run(tf.global_variables_initializer())
 training_epochs=100
 display_step=5
 
-
 plt.ion()
 for epoch in range(training_epochs):
 	avg_cost = 0
 	total_batch = int(n_samples / network_enc['batch_size'])
 	#print(total_batch
 	for i in range(total_batch):
-		batch_xs = frey_next_batch(network_enc['batch_size'],frey_images)
+		batch_xs = aod_next_batch(network_enc['batch_size'],rawData)
 		cost_show,my_reonstr,_=sess.run((cost,x_reconst_mean_flat,optimizer),feed_dict={x:batch_xs})
 		avg_cost += cost_show / n_samples * network_enc['batch_size']
-    # if (epoch % display_step == 0):
-	plt.subplot(221)
-	plt.imshow(my_reonstr[0, :].reshape(28, 20), cmap='gray')
-
-	plt.subplot(222)
-	plt.imshow(batch_xs[0, :].reshape(28, 20), cmap='gray')
-
-	plt.subplot(223)
-	plt.imshow(my_reonstr[1, :].reshape(28, 20), cmap='gray')
-
-	plt.subplot(224)
-	plt.imshow(batch_xs[1, :].reshape(28, 20), cmap='gray')                    
-	plt.suptitle('Conv VAE ', fontsize=16)
-	plt.pause(0.05)
-	print("Epoch:", '%04d' % (epoch+1),"cost=", "{:.9f}".format(avg_cost))             
+		#print('epoch:',epoch,' i:',i,avg_cost)
+	if (epoch % display_step == 0):
+		print("Epoch:", '%04d' % (epoch+1),"cost=", "{:.9f}".format(avg_cost))             
