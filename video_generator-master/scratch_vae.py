@@ -23,19 +23,19 @@ def xavier_init(fan_in, fan_out, constant=1):
                              minval=low, maxval=high,
                              dtype=tf.float32)
 
-np.random.seed(0)
-tf.set_random_seed(0)
+#np.random.seed(0)
+#tf.set_random_seed(0)
 #mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
-test_mat = spio.loadmat('frey.mat', squeeze_me=True)
-frey_images=test_mat['ff']
-frey_images=(frey_images-np.min(frey_images))/(np.max(frey_images)-np.min(frey_images))
-frey_images=np.transpose(frey_images)
+test_mat = spio.loadmat('totalAverage.mat', squeeze_me=True)
+frey_images=test_mat['total_average']
+#frey_images=(frey_images-np.min(frey_images))/(np.max(frey_images)-np.min(frey_images))
+#frey_images=np.transpose(frey_images)
 w,n_samples=frey_images.shape
 
 network_enc={
 'n_hidden_recog_1':200, # 1st layer encoder neurons
 'n_hidden_recog_2':200, # 2nd layer encoder neuronsn_hidden_gener_1=200, # 1st layer decoder neurons
-'n_input':560, # MNIST data input (img shape: 28*28)
+'n_input':116, # MNIST data input (img shape: 28*28)
 'n_z':20,
 'batch_size':20
 }
@@ -43,7 +43,7 @@ network_dec={
 'n_hidden_gen_1':200, # 1st layer encoder neurons
 'n_hidden_gen_2':200, # 2nd layer encoder neuronsn_hidden_gener_1=200, # 1st layer decoder neurons
 'n_hidden_gener_2':200, # 2nd layer decoder neurons # MNIST data input (img shape: 28*28)
-'n_input':560, # MNIST data input (img shape: 28*28)
+'n_input':116, # MNIST data input (img shape: 28*28)
 'n_z':20,
 'batch_size':20
 }
@@ -102,11 +102,11 @@ latent_loss = -0.5 * tf.reduce_sum(1 + z_log_sigma_sq
 cost=tf.reduce_mean(reconstr_loss + latent_loss) 
 ################ Optimizer ###############################
 optimizer = \
-tf.train.AdamOptimizer(learning_rate=0.001).minimize(cost)
+tf.train.AdamOptimizer(learning_rate=0.0003).minimize(cost)
 ################## Train   ###############################
 sess=tf.Session()
 sess.run(tf.global_variables_initializer())
-training_epochs=100
+training_epochs=4000
 display_step=5
 plt.ion()
 for epoch in range(training_epochs):
@@ -124,18 +124,18 @@ for epoch in range(training_epochs):
             avg_cost += cost_show / n_samples * network_enc['batch_size']
 
 	        #plt.subplot(221)
-        plt.subplot(221)
-        plt.imshow(my_reonstr[0, :].reshape(28, 20), cmap='gray')
+        # plt.subplot(221)
+        # plt.imshow(my_reonstr[0, :].reshape(28, 20), cmap='gray')
 
-        plt.subplot(222)
-        plt.imshow(batch_xs[0, :].reshape(28, 20), cmap='gray')
+        # plt.subplot(222)
+        # plt.imshow(batch_xs[0, :].reshape(28, 20), cmap='gray')
 
-        plt.subplot(223)
-        plt.imshow(my_reonstr[1, :].reshape(28, 20), cmap='gray')
+        # plt.subplot(223)
+        # plt.imshow(my_reonstr[1, :].reshape(28, 20), cmap='gray')
 
-        plt.subplot(224)
-        plt.imshow(batch_xs[1, :].reshape(28, 20), cmap='gray')                    
-        plt.pause(0.05)
+        # plt.subplot(224)
+        # plt.imshow(batch_xs[1, :].reshape(28, 20), cmap='gray')                    
+        # plt.pause(0.05)
         if epoch % display_step == 0:
             print("Epoch:", '%04d' % (epoch+1),
                   "cost=", "{:.9f}".format(avg_cost))            
