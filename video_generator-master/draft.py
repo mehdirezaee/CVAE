@@ -90,9 +90,9 @@ width,height=rawData.shape[1],rawData.shape[2]
 depth=rawData.shape[3]
 
 network_enc={
-'output1':12, # 1st layer encoder neurons
-'output2':5, # 2nd layer encoder neuronsn_hidden_gener_1=200, # 1st layer decoder neurons
-'n_input':560, # MNIST data input (img shape: 28*28)
+'output1':20, # 1st layer encoder neurons
+'output2':10, # 2nd layer encoder neuronsn_hidden_gener_1=200, # 1st layer decoder neurons
+#'n_input':560, # MNIST data input (img shape: 28*28)
 'n_z':20,
 'batch_size':30
 }
@@ -192,12 +192,14 @@ x_flat=tf.reshape(x,[-1,width*height*depth])
 
 
 ##################### Optimizer ################################
+
 latent_loss = -0.5 * tf.reduce_sum(1 + z_log_sigma_sq
 	- tf.square(z_mean)-tf.exp(z_log_sigma_sq), 1)
 reconstr_loss = \
 -tf.reduce_sum(-0.5*tf.log(2*np.pi)-0.5*(x_reconst_log_sigma_flat)-tf.divide(
 	tf.pow((x_flat-x_reconst_mean_flat),2),2*tf.exp(x_reconst_log_sigma_flat))
                            ,1)
+#reconstr_loss = -tf.reduce_sum(tf.reshape(x,[-1,53*63*46]) * tf.log(1e-10 + x_reconst_mean_flat)+ (1-tf.reshape(x,[-1,53*63*46])) * tf.log(1e-10 + 1 - x_reconst_mean_flat),1)                           
 cost=tf.reduce_mean(reconstr_loss + latent_loss) 
 optimizer = tf.train.AdamOptimizer(learning_rate=0.01).minimize(cost)
 ##############################################################
@@ -212,7 +214,7 @@ optimizer = tf.train.AdamOptimizer(learning_rate=0.01).minimize(cost)
 
 sess=tf.Session()
 sess.run(tf.global_variables_initializer())
-training_epochs=200
+training_epochs=400
 display_step=5
 
 plt.ion()
@@ -227,7 +229,7 @@ for epoch in range(training_epochs):
 		#print('epoch:',epoch,' i:',i,avg_cost)
 	if (epoch % display_step == 0):
 		print("Epoch:", '%04d' % (epoch+1),"cost=", "{:.9f}".format(avg_cost))
-	if (epoch==191):
+	if (epoch==391):
 		ims=[]
 		fig=plt.figure()
 		for i in range(0,45):
