@@ -19,16 +19,16 @@ import gc
 #np.random.seed(0)
 
 #mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
-rawData = spio.loadmat('../Task_data/AOD1.mat', squeeze_me=True)
-rawData=rawData['ODD']
-raw_min=np.min(rawData)
-raw_max=np.max(rawData)
-rawData=(rawData-raw_min)/(raw_max-raw_min)
-beta = 0.01
-for r in range(0,rawData.shape[0]):
-    for c in range(0,rawData.shape[1]):
-        if(rawData[r,c]<0.52 and rawData[r,c]>0.47):
-            rawData[r,c]=0
+rawData = spio.loadmat('totalAverage.mat', squeeze_me=True)
+rawData=rawData['total_average']
+# raw_min=np.min(rawData)
+# raw_max=np.max(rawData)
+# rawData=(rawData-raw_min)/(raw_max-raw_min)
+# beta = 0.01
+# for r in range(0,rawData.shape[0]):
+#     for c in range(0,rawData.shape[1]):
+#         if(rawData[r,c]<0.52 and rawData[r,c]>0.47):
+#             rawData[r,c]=0
 #test_mat=(rawData-np.min(rawData))/(np.max(rawData)-np.min(rawData))
 ''''
 test_mat=(rawData-raw_min)/(raw_max-raw_min)
@@ -79,7 +79,7 @@ class VariationalAutoencoder(object):
     """
 
     def __init__(self, network_architecture, transfer_fct=tf.nn.softplus,
-                 learning_rate=0.001, batch_size=100):
+                 learning_rate=0.0003, batch_size=100):
         self.network_architecture = network_architecture
         self.transfer_fct = transfer_fct
         self.learning_rate = learning_rate
@@ -248,8 +248,9 @@ class VariationalAutoencoder(object):
 
         sparsity_loss=tf.reduce_sum(tf.abs(self.x_reconstr_mean),1)
         regularizer_first_layer = tf.nn.l2_loss(self.layer_1_weight)
-        #self.cost = tf.reduce_mean(reconstr_loss + latent_loss)  # average over batch
-        self.cost = tf.reduce_mean(reconstr_loss + latent_loss+0.1*sparsity_loss+beta*regularizer_first_layer)  # average over batch
+        beta=0
+        self.cost = tf.reduce_mean(reconstr_loss + latent_loss)  # average over batch
+        #self.cost = tf.reduce_mean(reconstr_loss + latent_loss+0.1*sparsity_loss+beta*regularizer_first_layer)  # average over batch
         self.reconstr_loss=reconstr_loss
         self.latent_loss=latent_loss
         # Use ADAM optimizer
@@ -398,7 +399,7 @@ def train(data_input,network_architecture, learning_rate=0.0001,
 
 ################# Train and Test Function ###############################################################
 for k in range(0,10):
-    tf.set_random_seed(0)
+    #tf.set_random_seed(0)
     ###Training percent, control and patient sizes
     Train_size=0.7
     control_size=150
@@ -442,16 +443,16 @@ for k in range(0,10):
 
 
     network_architecture = \
-        dict(n_hidden_recog_1=70, # 1st layer encoder neurons
-             n_hidden_recog_2=70, # 2nd layer encoder neurons
-             n_hidden_gener_1=70, # 1st layer decoder neurons
-             n_hidden_gener_2=70, # 2nd layer decoder neurons
+        dict(n_hidden_recog_1=200, # 1st layer encoder neurons
+             n_hidden_recog_2=200, # 2nd layer encoder neurons
+             n_hidden_gener_1=200, # 1st layer decoder neurons
+             n_hidden_gener_2=200, # 2nd layer decoder neurons
              n_input=X_train.shape[1], # MNIST data input (img shape: 28*28)
              n_z=20,
              )  # dimensionality of latent space
-    batch_size=10
+    batch_size=20
 
-    (vae,loss_step,loss_vec) = train(X_train,network_architecture,batch_size=batch_size, training_epochs=5)
+    (vae,loss_step,loss_vec) = train(X_train,network_architecture,batch_size=batch_size, training_epochs=1000)
     (z_mean_train,x_trian_reconstr_mean)=vae.test_reconstruct(X_train)
     (z_mean_test,x_test_reconstr_mean)=vae.test_reconstruct(X_test)
     #print('z_mean_shape',z_mean.shape)
