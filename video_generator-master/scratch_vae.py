@@ -34,6 +34,7 @@ rawData=frey_images
 #frey_images=np.transpose(frey_images)
 w,n_samples=frey_images.shape
 
+
 network_enc={
 'n_hidden_recog_1':70, # 1st layer encoder neurons
 'n_hidden_recog_2':70, # 2nd layer encoder neuronsn_hidden_gener_1=200, # 1st layer decoder neurons
