@@ -19,11 +19,11 @@ samplesNum=100;
 # plt.show()
 
 for k in range(0,3010):
-		if (counter_six<samplesNum and np.flatnonzero(mnist.train.labels[k])[0]==np.flatnonzero(mnist.train.labels[1])[0]):
+		if (counter_six<samplesNum and np.flatnonzero(mnist.train.labels[k])[0]==np.flatnonzero(mnist.train.labels[2])[0]):
 			counter_six=counter_six+1
 			data_mem_six=np.concatenate([data_mem_six,[mnist.train.images[k,:]]],axis=0)
 
-		if (counter_three<samplesNum and np.flatnonzero(mnist.train.labels[k])[0]==np.flatnonzero(mnist.train.labels[3])[0]):
+		if (counter_three<samplesNum and np.flatnonzero(mnist.train.labels[k])[0]==np.flatnonzero(mnist.train.labels[8])[0]):
 			counter_three=counter_three+1
 			data_mem_three=np.concatenate([data_mem_three,[mnist.train.images[k,:]]],axis=0)
 
@@ -111,18 +111,18 @@ z=tf.add(z_mean,tf.matmul(tf.sqrt(tf.exp(z_log_sigma_sq)), eps))
 #################### Output ###############################
 layer_1_recons=tf.nn.softplus(tf.add(tf.matmul(z,z_h1r_w),z_h1r_b))
 layer_2_recons=tf.nn.softplus(tf.add(tf.matmul(layer_1_recons,h1r_h2r_w),h1r_h2r_b))
-x_reconstr_mean= tf.add(tf.matmul(layer_2_recons,h2_recons_mean_w),h2_reocns_mean_b)
+x_reconstr_mean= tf.sigmoid(tf.add(tf.matmul(layer_2_recons,h2_recons_mean_w),h2_reocns_mean_b))
 x_reconstr_log_sigma=tf.add(tf.matmul(layer_2_recons,h2_recons_var_w),h2_reocns_var_b)
 ################## Loss ##################################
-reconstr_loss = \
--tf.reduce_sum(-0.5*tf.log(2*np.pi)-0.5*(x_reconstr_log_sigma)-tf.divide(
-	tf.pow((x-x_reconstr_mean),2),2*tf.exp(x_reconstr_log_sigma))
-                           ,1)
-
 # reconstr_loss = \
-#     -tf.reduce_sum(x * tf.log(1e-10 + x_reconstr_mean)
-#                    + (1-x) * tf.log(1e-10 + 1 - x_reconstr_mean),
-#                    1)
+# -tf.reduce_sum(-0.5*tf.log(2*np.pi)-0.5*(x_reconstr_log_sigma)-tf.divide(
+# 	tf.pow((x-x_reconstr_mean),2),2*tf.exp(x_reconstr_log_sigma))
+#                            ,1)
+
+reconstr_loss = \
+    -tf.reduce_sum(x * tf.log(1e-10 + x_reconstr_mean)
+                   + (1-x) * tf.log(1e-10 + 1 - x_reconstr_mean),
+                   1)
 
 latent_loss = -0.5 * tf.reduce_sum(1 + z_log_sigma_sq
 	- tf.square(z_mean)-tf.exp(z_log_sigma_sq), 1)
@@ -130,13 +130,13 @@ latent_loss = -0.5 * tf.reduce_sum(1 + z_log_sigma_sq
 cost=tf.reduce_mean(reconstr_loss + latent_loss) 
 ################ Optimizer ###############################
 optimizer = \
-tf.train.AdamOptimizer(learning_rate=0.001).minimize(cost)
+tf.train.AdamOptimizer(learning_rate=0.0001).minimize(cost)
 ################## Train   ###############################
-training_epochs=2000
+training_epochs=5000
 display_step=100
 plt.ion()
 fig=plt.figure()
-for k in range(0,10):
+for k in range(0,1):
     sess=tf.Session()
     sess.run(tf.global_variables_initializer())
     Train_size=0.7
@@ -189,13 +189,14 @@ for k in range(0,10):
             if epoch % display_step == 0:
                 print("Epoch:", '%04d' % (epoch+1),
                     "cost=", "{:.9f}".format(avg_cost)) 
-                # plt.subplot(121)
-                # plt.imshow(my_reonstr[0, :].reshape(28, 28), cmap='gray')
+                plt.subplot(121)
+                plt.imshow(my_reonstr[0, :].reshape(28, 28), cmap='gray')
 
-                # plt.subplot(122)
-                # plt.imshow(batch_xs[0, :].reshape(28, 28), cmap='gray')
-                # plt.pause(0.001)
+                plt.subplot(122)
+                plt.imshow(batch_xs[0, :].reshape(28, 28), cmap='gray')
+                plt.pause(0.001)
     z_mean_train=sess.run(z_mean,feed_dict={x:X_train})
+    print('z_mean_train',z_mean_train.shape)
     z_mean_test=sess.run(z_mean,feed_dict={x:X_test})
     clf = svm.SVC(kernel='poly',degree=4)
     clf.fit(z_mean_train,np.ravel(groups))
